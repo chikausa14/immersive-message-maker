@@ -1,1 +1,1 @@
-Preview lifecycle integration check: version 1
+Preview lifecycle integration check: version 2

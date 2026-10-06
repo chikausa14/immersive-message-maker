@@ -1,0 +1,61 @@
+name: Publish production and PR previews
+
+on:
+  push:
+    branches: [main]
+  # Use trusted main automation, including when the PR changes workflow files.
+  # The builder only reads PR Git blobs. It never checks out or runs PR code.
+  pull_request_target:
+    branches: [main]
+    types: [opened, synchronize, reopened, closed, edited]
+  workflow_dispatch:
+  # Reconcile missed events and remove stale previews without storing site state.
+  schedule:
+    - cron: '17 4 * * *'
+
+permissions: {}
+
+# Pages deploys the whole site. Serialize all events, not just events for one PR.
+# Every run rebuilds current main + ALL open eligible PRs, so replacing a pending
+# run cannot lose another PR's update or cleanup.
+concurrency:
+  group: pages-production-and-previews
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Check out trusted production source and automation
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Assemble the complete static site without executing PR code
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/build_pages.py --output "$RUNNER_TEMP/pages-site"
+      - name: Upload the complete Pages artifact
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
+        with:
+          path: ${{ runner.temp }}/pages-site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish production and previews together
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

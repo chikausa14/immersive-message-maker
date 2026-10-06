@@ -26,3 +26,10 @@ Open `immersive-message-maker-standalone.html` directly, or host `index.html` on
 ## v0.4.2
 
 - Hardened the tappable WeChat voice-note control against host/theme CSS. The native disclosure element is now visually reset, while the actual voice bubble lives inside a fully inline-styled child element. This keeps the no-JavaScript tap-to-transcript behavior without inheriting TauriTavern button styling.
+
+## PR previews
+
+Open same-repository PRs targeting `main` have public previews at
+`https://chikausa14.github.io/immersive-message-maker/previews/pr-N/`.
+Production continues to use `main`. See [preview deployment setup and safety notes](docs/preview-deployments.md)
+for updates, cleanup, browser-origin sharing, and rollback.
